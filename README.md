@@ -13,12 +13,13 @@ All data saved with this is for the user's viewing ONLY and cannot be read back 
 # Sending Data to Clients
 Data is sent to a user's game using a client command called `clientCmdReceiveStat`.
 This command is called using commandToClient, like this: `commandToClient(%client, 'ReceiveStat', "Name", "Group", "Data Type", Data, "String");`
-Data is stored and displayed in the order it is sent, so it needs to be initialized in the desired display order.
+Example: `commandToClient(%client, 'ReceiveStat', "Rounds Won", "General", "Additive", %client.roundsWon);`
+IMPORTANT: Data is stored and displayed in the order it is sent, so it needs to be initialized in the desired display order.
 ## Parameters
 These are the parameters used by the function:
 ### Name
 The name of the variable you want to set. This will be displayed in the GUI.
-This is used to identify your variable within the game-mode.
+This is used to uniquely identify the variable within its group.
 ### Group
 The group that the variable will be displayed under in the GUI. If '0' or blank, this defaults to "General".
 Multiple variables can use the same name as long as they are in different groups.
@@ -33,29 +34,39 @@ For example, with a boolean variable, you probably want to show something like "
 ## Data Types
 - Additive: A number that increases over time. Examples: Kills, deaths, rounds won/lost
 - High: The highest overall value attained for this stat. Example: High score (Works for true/false (1/0) values)
-- Low: The lowest overall value attained for this stat. Example: High score (...if you're playing golf) (Works for true/false (1/0) values)
+- Low: The lowest overall value attained for this stat. Example: High score (in golf) (Works for true/false (1/0) values)
 - Achievement: Same as 'high', but displays differently in the interface. Intended for boolean values. Use this to represent unlockables, achievements, etc. See 'Init Handshake'
 
 More data types may be added in the future. If an unrecognized data type is detected, the variable will save but it won't display in the interface.
+Leave this argument blank to register hidden data. (Note: Hidden data still counts toward the limit.)
 
 ## Deleting Data and Renaming Sections
 When resetting all user data, consider renaming the old groups instead of removing them entirely. This way, users can still view their old data.
 The following function renames a category:
-`[ Not yet implemented ]`
+`commandToClient(%client, "renameStatGroup" "oldCategoryName", "newName")`
 
 If all else fails, data can be entirely removed using the following functions:
-Remove a single variable: `[ Not yet implemented ]`
-Remove an entire section: `[]`
+Remove a single variable: `commandToClient(%client, "deleteStat", "statName");`
+Remove an entire section: `commandToClient(%client, "deleteStatGroup", "statGroupName");`
 
 # Init Handshake
-It is best practice to initialize all of your data. If data is not initialize
+Clients display data in the order they receive it. It is best practice to, when each user first joins, 'initialize' all of this data.
+This way, everything displays consistently and in the intended order.
 
-Clients display data in the order it was received.
+{Write below, only send handshake if uninitialized and require 'initialized' flag}
+`serverCmdStatHandshake(a,b,c)`
 
-The best way to ensure data is displayed in the desired order is to initialize it.
+Below is an example of this function's proper usage.
+`package myGameMode
+{
+	function serverCmdStatHandshake(%client,%a, %b, %c)
+	{
+		// Initialize our stats.
+		commandToClient(%client, 'ReceiveStat', "Rounds Won", "General", "Additive", 0); // Start this out as 0.
 
-Data can be initialized by packaging the command: `serverCmdStatHandshake(init,a,b,c)`
-Clients send this handshake each time they join, setting `%init` to 1 if they have never received data from the server. %a, %b, and %c are currently unused; make sure to pass them through in packages for future use.
-Package this to send initial data such as locked achievements, or to generally ensure everything displays in the desired order.
+		Parent::ServerCmdStatHandshake(%client, %a, %b, %c); // Parent. This is so we don't override other mods that use this function.
+	}
+};
+activatePackage("myGameMode");`
 
 Beware: Users can manually trigger this command.

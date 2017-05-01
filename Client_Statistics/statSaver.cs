@@ -36,6 +36,8 @@ $Library::StatSaver::Ver = 1;
 //TO DO: Find a way to support exponential level scales (for servers with a levelling system)
 function clientCmdReceiveStat(%name, %group, %data)
 {
+	// TODO: PARTIALLY IMPLEMENTED
+
 	if(%name $= "" || %data $= "") // Cancel if input is blank.
 		return;
 
@@ -52,10 +54,26 @@ function clientCmdReceiveStat(%name, %group, %data)
 	echo("Received stat; Group: " @ %group @ "; Name:" @ %name @ "; Data: '" @ %data @ "'");
 }
 
+function clientCmdRenameStatGroup(%old, %new)
+{
+	// TODO: NOT IMPLEMENTED
+}
+
+function clientCmdDeleteStat(%name)
+{
+	// TODO: NOT IMPLEMENTED
+}
+
+function clientCmdDeleteStatGroup(%group)
+{
+	// TODO: NOT IMPLEMENTED
+}
+
 // # File-Handling Functions
 
 function Stat::ReadStats(%gamemode, %host)
 {
+	// TODO: PARTIALLY IMPLEMENTED
 
 	%file = new FileObject();
 
@@ -71,6 +89,8 @@ function Stat::ReadStats(%gamemode, %host)
 
 function Stat::WriteStats(%gamemode, %host)
 {
+	// TODO: PARTIALLY IMPLEMENTED
+
 	%file = new FileObject();
 
 	//Use .log format?
@@ -83,7 +103,7 @@ function Stat::WriteStats(%gamemode, %host)
 }
 
 // # Packaged
-
+// TODO: PARTIALLY IMPLEMENTED
 package Client_StatSaver
 {
 	// Stats are separated by game-mode and host.
