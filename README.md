@@ -53,11 +53,12 @@ Remove an entire section: `commandToClient(%client, "deleteStatGroup", "statGrou
 Clients display data in the order they receive it. It is best practice to, when each user first joins, 'initialize' all of this data.
 This way, everything displays consistently and in the intended order.
 
-{Write below, only send handshake if uninitialized and require 'initialized' flag}
+{Write: only send handshake if uninitialized and require 'initialized' flag}
 `serverCmdStatHandshake(a,b,c)`
 
 Below is an example of this function's proper usage.
-`package myGameMode
+~~~~
+package myGameMode
 {
 	function serverCmdStatHandshake(%client,%a, %b, %c)
 	{
@@ -67,6 +68,7 @@ Below is an example of this function's proper usage.
 		Parent::ServerCmdStatHandshake(%client, %a, %b, %c); // Parent. This is so we don't override other mods that use this function.
 	}
 };
-activatePackage("myGameMode");`
+activatePackage("myGameMode");
+~~~~
 
 Beware: Users can manually trigger this command.
