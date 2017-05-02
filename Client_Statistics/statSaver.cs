@@ -7,6 +7,7 @@
 // This contains all of the 'background' client functionality, allowing
 // the game to receive and store data.
 //----------------------------------------------------------------------
+// NOTE: Currently in development; this script is non-functional.
 
 // NOTE: To improve performance, this check should be performed before executing. Example:
 //if($Library::StatSaver::Ver <= 1)
@@ -34,8 +35,9 @@ $Library::StatSaver::Ver = 1;
 //TO DO: CHECK FOR BLANK INPUT
 //TO DO: Tailored achievement support.
 //TO DO: Find a way to support exponential level scales (for servers with a levelling system)
-function clientCmdReceiveStat(%name, %group, %data)
+function clientCmdReceiveStat(%name, %group, %type, %data, %string)
 {
+	// TODO: CLEAN TABS FROM ALL INPUT (conver to spaces?)
 	// TODO: PARTIALLY IMPLEMENTED
 
 	if(%name $= "" || %data $= "") // Cancel if input is blank.
@@ -48,8 +50,12 @@ function clientCmdReceiveStat(%name, %group, %data)
 	if($Stat::Count[$Stat::Server] > 255)
 		return;
 
- $Stat::Count[$Stat::Server]++;
+ 	$Stat::c[$Stat::Server,$Stat::GameMode]++;
+
 	$Stat::a[$Stat::Server,%group,%name] = %data;
+	$Stat::str[$Stat::Server,%group,%name] = %string;
+
+	$Stat::b[%Stat::Count] = %name TAB %group TAB %type TAB %data TAB %string;
 
 	echo("Received stat; Group: " @ %group @ "; Name:" @ %name @ "; Data: '" @ %data @ "'");
 }
@@ -82,9 +88,19 @@ function Stat::ReadStats(%gamemode, %host)
 
 	while(!%file.isEOF())
 	{
+		// TODO: Make sure lines start at 1 instead of 0
 		%line[%lines++] = %file.readLine();
-		// Convert data to variables
+
+		%name = getField(%line,0);
+		%group = getField(%line,1);
+
+		$Stat::a[$Stat::Server,%group,%name] = %data;
+		$Stat::str[$Stat::Server,%group,%name] = %string;
+
+		$Stat::b[%line] = %line;
 	}
+
+	$Stat::c = %lines;
 }
 
 function Stat::WriteStats(%gamemode, %host)
@@ -93,12 +109,18 @@ function Stat::WriteStats(%gamemode, %host)
 
 	%file = new FileObject();
 
-	//Use .log format?
 	%file.openForWrite("config/client/stats/" @ %gamemode @ "/" @ %host @ ".log"); //%host should be by bl-id if possible
 
-	for(%i = 0; %i >= $Stat::Variables[%placeholderstuff])
+	// TODO: Make sure %i should start at 0
+	for(%i = 0; %i >= $Stat::Variables; %i++)
 	{
-
+		%file.writeLine(
+		$Stat::vName[%i]
+		TAB $Stat::vGroup[%i]
+		TAB $Stat::vType[%i]
+		TAB $Stat::vData[%i]
+		TAB $Stat::vString[%i]
+		);
 	}
 }
 
@@ -107,12 +129,29 @@ function Stat::WriteStats(%gamemode, %host)
 package Client_StatSaver
 {
 	// Stats are separated by game-mode and host.
-  function PackagePlaceholder::joinServer(%host,%gamemode)
+  function connectToServer(%ip, %a, %b, %c)
   {
-		// Different 'games' are identified by host and game-mode name.
-    //$Stat::Server = %gamemode @ "_" %host;
-    //$Stat::GameMode = %gamemode;
-    //$Stat::Host = %host;
+		%server = JS_ServerList.getRowText(JS_ServerList.getSelectedID());
+		%serverIP = getField(%server, 9); // Get the ip+port
+
+		if(%ip !$= %serverIP)
+		{
+			error("Stat Saver - Server does not match! Stats will not be logged for this session.");
+			return Parent::connectToServer(%ip, %a, %b, %c);
+		}
+
+    $Stat::GameMode = getField(%server, 8);
+
+		// Host is more complicated. Because the server list doesn't include IPs,
+		// we have to use an unofficial API: https://bllist.theblackparrot.me/api/
+
+		// TEMPORARY: The server name and host is used for now.
+		// This will change before release.
+		$Stat::Host = getField(%server, 2);
+
+		$Stat::Server = $Stat::GameMode @ "_" @ $Stat::Host;
+
+		return Parent::connectToServer(%ip, %a, %b, %c);
   }
 
 	// Record kills
