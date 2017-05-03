@@ -30,6 +30,7 @@ This is the actual value. For organization purposes, this must be in numeric for
 ### String (Optional)
 If specified, will display in place of the 'data' parameter in the GUI.
 For example, with a boolean variable, you probably want to show something like "Yes" instead of "1".
+**WARNING: Only use this with the 'Additive' and 'Achievement' data types. (See below)**
 
 ## Data Types
 - Additive: A number that increases over time. Examples: Kills, deaths, rounds won/lost
