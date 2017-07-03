@@ -9,15 +9,7 @@
 //----------------------------------------------------------------------
 // NOTE: Currently in development; this script is non-functional.
 
-// NOTE: To improve performance, this check should be performed before executing. Example:
-//if($Library::StatSaver::Ver <= 1)
-//	exec("./statSaver.cs");
-if($Library::StatSaver::Ver >= 1)
-	return;
-
-$Library::StatSaver::Ver = 1;
-
-// # Client-Server Communication
+////// # Client-Server Communication
 
 // clientCmdReceiveStat(name, group, data);
 // Set a stat that will be saved on the client side.
@@ -37,8 +29,7 @@ $Library::StatSaver::Ver = 1;
 //TO DO: Find a way to support exponential level scales (for servers with a levelling system)
 function clientCmdReceiveStat(%name, %group, %type, %data, %string)
 {
-	// TODO: CLEAN TABS FROM ALL INPUT (conver to spaces?)
-	// TODO: PARTIALLY IMPLEMENTED
+	// TODO: CLEAN TABS FROM ALL INPUT (convert to spaces?)
 
 	if(%name $= "" || %data $= "") // Cancel if input is blank.
 		return;
@@ -75,8 +66,13 @@ function clientCmdDeleteStatGroup(%group)
 	// TODO: NOT IMPLEMENTED
 }
 
-// # File-Handling Functions
+////// # Data Handling
+function Stat::CleanUp()
+{
+	// TODO: NOT IMPLEMENTED
+}
 
+////// # File Handling
 function Stat::ReadStats(%gamemode, %host)
 {
 	// TODO: PARTIALLY IMPLEMENTED
@@ -103,6 +99,11 @@ function Stat::ReadStats(%gamemode, %host)
 	$Stat::c = %lines;
 }
 
+// Some notes:
+// We'll need to strip non-file-friendly characters from a host's name.
+// If a host's name consists entirely of special characters, we'll have to throw a warning and cancel logging.
+// stripChars(%str, "\/:*?<>|\"")
+
 function Stat::WriteStats(%gamemode, %host)
 {
 	// TODO: PARTIALLY IMPLEMENTED
@@ -115,44 +116,107 @@ function Stat::WriteStats(%gamemode, %host)
 	for(%i = 0; %i >= $Stat::Variables; %i++)
 	{
 		%file.writeLine(
-		$Stat::vName[%i]
-		TAB $Stat::vGroup[%i]
-		TAB $Stat::vType[%i]
-		TAB $Stat::vData[%i]
-		TAB $Stat::vString[%i]
+			$Stat::vName[%i]
+			TAB $Stat::vGroup[%i]
+			TAB $Stat::vType[%i]
+			TAB $Stat::vData[%i]
+			TAB $Stat::vString[%i]
 		);
 	}
 }
 
 // # Packaged
-// TODO: PARTIALLY IMPLEMENTED
-package Client_StatSaver
+deactivatePackage("StatSaver");
+package StatSaver
 {
+	// The function connectToServer is used to determine the current server.
 	// Stats are separated by game-mode and host.
   function connectToServer(%ip, %a, %b, %c)
   {
-		%server = JS_ServerList.getRowText(JS_ServerList.getSelectedID());
+		%server = JS_ServerList.getRowTextByID(JS_ServerList.getSelectedID());
 		%serverIP = getField(%server, 9); // Get the ip+port
 
+		//echo(%ip SPC %serverIP);
 		if(%ip !$= %serverIP)
 		{
 			error("Stat Saver - Server does not match! Stats will not be logged for this session.");
 			return Parent::connectToServer(%ip, %a, %b, %c);
 		}
 
-    $Stat::GameMode = getField(%server, 8);
+		$Stat::NextGameMode = getField(%server, 8);
 
-		// Host is more complicated. Because the server list doesn't include IPs,
-		// we have to use an unofficial API: https://bllist.theblackparrot.me/api/
+		// All data is tied to a server's host username and game-mode.
+		// Note that having a "s' " or "s' " in a username can interfere with this check.
+		%field = getField(%server, 2);
+		%pos = strPos(%field, "'s");
 
-		// TEMPORARY: The server name and host is used for now.
-		// This will change before release.
-		$Stat::Host = getField(%server, 2);
+		// If there is no "'s" then try "s'"
+		if(%pos == -1)
+			%pos = strpos(%field, "s'");
 
-		$Stat::Server = $Stat::GameMode @ "_" @ $Stat::Host;
+		// If there's still nothing, whoops.
+		if(%pos == -1)
+		{
+			error("Stat Saver - Invalid host field! Stats will not be logged for this session.");
+			return Parent::connectToServer(%ip, %a, %b, %c);
+		}
+
+		$Stat::NextHost = getSubStr(%field, 0, %pos);
+		$Stat::NextServer = $Stat::GameMode @ "_" @ $Stat::Host;
+
+		$Stat::NextIP = %serverIP;
 
 		return Parent::connectToServer(%ip, %a, %b, %c);
   }
+
+	function GameConnection::onConnectionAccepted(%connection)
+	{
+		if($Stat::NextIP !$= %connection.getAddress())
+		{
+			error("Stat Saver - Server's IP does not match connection! Stats will not be logged for this session.");
+			return Parent::onConnectionAccepted(%a);
+		}
+
+		if($Stat::Connected == 1)
+		{
+			error("Stat Saver - Failed to disconnect from previous server. Cleaning up now...");
+			Stat::CleanUp();
+		}
+
+		$Stat::Connected = 1;
+
+		$Stat::Host = $Stat::NextHost;
+		$Stat::Server = $Stat::NextServer;
+		$Stat::GameMode = $Stat::NextGameMode;
+
+		return Parent::onConnectionAccepted(%a);
+	}
+
+	function disconnectedCleanup(%a)
+	{
+		if($Stat::Connected == 0)
+		{
+			error("Stat Saver - Disconnected from uninitialized server! No data has been exported.");
+			Parent::disconnectedCleanup(%a);
+		}
+		$Stat::Connected = 0;
+
+		Parent::disconnectedCleanup(%a);
+	}
+
+	function onServerCreated()
+	{
+		if($Stat::Connected == 1)
+		{
+			error("Stat Saver - Failed to disconnect from previous server. Cleaning up now...");
+			Stat::CleanUp();
+		}
+		$Stat::Connected = 1;
+
+		// TODO: Fill host info when server is started.
+
+		Parent::onServerCreated();
+	}
 
 	// Record kills
 	function PackagePlaceholder::onKillPlayer()
@@ -166,5 +230,4 @@ package Client_StatSaver
 		// To do: Record this as a stat
 	}
 };
-deactivatePackage("Client_StatSaver");
-activatePackage("Client_StatSaver");
+activatePackage("StatSaver");

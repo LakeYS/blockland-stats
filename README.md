@@ -18,7 +18,7 @@ IMPORTANT: Data is stored and displayed in the order it is sent, so it needs to 
 ## Parameters
 These are the parameters used by the function:
 ### Name
-The name of the variable you want to set. This will be displayed in the GUI.
+The name of the variable. This will be displayed in the GUI.
 This is used to uniquely identify the variable within its group.
 ### Group
 The group that the variable will be displayed under in the GUI. If '0' or blank, this defaults to "General".
@@ -51,8 +51,7 @@ Remove a single variable: `commandToClient(%client, "deleteStat", "statName");`
 Remove an entire section: `commandToClient(%client, "deleteStatGroup", "statGroupName");`
 
 # Init Handshake
-Clients display data in the order they receive it. It is best practice to, when each user first joins, 'initialize' all of this data.
-This way, everything displays consistently and in the intended order.
+Clients display data in the order they receive it. It is best practice to initialize all of this data when each user first joins. This way, everything displays consistently and in the intended order.
 
 {Write: only send handshake if uninitialized and require 'initialized' flag}
 `serverCmdStatHandshake(a,b,c)`
