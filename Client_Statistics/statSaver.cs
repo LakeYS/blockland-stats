@@ -23,7 +23,6 @@
 ////// - To mark a group as a leaderboard, set "_leaderboard" to 1. This will allow the user to see a 'global' leaderboard of all the servers they've joined.
 ////// - Any variables starting with "_" will be ignored as a reservation for special tags.
 ////// - Beware: %name and %group will have character limits for the GUI. Stick to reasonably short titles.
-//TO DO: Need a way to 'archive' old values. Consider making a function for renaming groups.
 //TO DO: CHECK FOR BLANK INPUT
 //TO DO: Tailored achievement support.
 //TO DO: Find a way to support exponential level scales (for servers with a levelling system)
