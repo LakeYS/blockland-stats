@@ -37,6 +37,11 @@ For example, with a boolean variable, you probably want to show something like "
 - High: The highest overall value attained for this stat. Example: High score (Works for true/false (1/0) values)
 - Low: The lowest overall value attained for this stat. Example: High score (in golf) (Works for true/false (1/0) values)
 - Achievement: Same as 'high', but displays differently in the interface. Intended for boolean values. Use this to represent unlockables, achievements, etc. See 'Init Handshake'
+- TimeStamp_Earliest: A time or date stamp, sorted by latest. Example: First kill
+- TimeStamp_Latest: A time or date stamp, sorted by latest. Example: Most recent kill
+- Timer_Shortest: An amount of time in milliseconds, sorted by shortest length. Automatically convered to hh:mm:ss in the interface. Example: Fastest round played
+- Timer_Longest: An amount of time in milliseconds, sorted by longest length. Automatically convered to hh:mm:ss in the interface. Example: Longest time alive
+
 
 More data types may be added in the future. If an unrecognized data type is detected, the variable will save but it won't display in the interface.
 Leave this argument blank to register hidden data. (Note: Hidden data still counts toward the limit.)
