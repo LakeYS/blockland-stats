@@ -1,3 +1,6 @@
+# Development Notice
+I have decided to stop development indefinitely on this project due to the current state of Blockland and its declining playerbase. The source code and documentation will remain available here for reference. I hope to revisit the concept one day in a different form, but for now this project has been tabled.
+
 # Blockland Game Statistics
 [Project Summary]
 
